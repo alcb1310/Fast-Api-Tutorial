@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from apis.version1 import route_general_pages, route_users, route_jobs
+from apis.version1.routes import route_general_pages, route_users, route_jobs
 
 api_router = APIRouter()
 api_router.include_router(
