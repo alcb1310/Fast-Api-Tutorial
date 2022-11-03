@@ -2,13 +2,14 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from core.config import settings
-from apis.general_pages.route_homepage import general_pages_router
+
+from apis.base import api_router
 from db.session import engine
 from db.base import Base
 
 
 def include_router(router_app):
-    router_app.include_router(general_pages_router)
+    router_app.include_router(api_router)
 
 
 def configure_static(static_app):
@@ -21,7 +22,7 @@ def create_tables():
 
 def start_application():
     application = FastAPI(title=settings.PROJECT_NAME,
-                  version=settings.PROJECT_VERSION)
+                          version=settings.PROJECT_VERSION)
     include_router(application)
     configure_static(application)
     create_tables()
