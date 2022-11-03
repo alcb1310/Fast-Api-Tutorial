@@ -4,7 +4,7 @@ from typing import List
 
 from db.session import get_db
 from schemas.jobs import JobCreate, ShowJob
-from db.repository.jobs import create_new_job, retreive_job, list_jobs, update_job_by_id
+from db.controller.jobs import create_new_job, retreive_job, list_jobs, update_job_by_id, delete_job_by_id
 
 router = APIRouter()
 
@@ -44,3 +44,13 @@ def update_job(id: int, job: JobCreate, db: Session = Depends(get_db)):
                             detail=f"Job with id {id} not found")
 
     return {"msg": "Successfully updated data."}
+
+
+@router.delete("/{id}")
+def delete_job(id: int, db: Session = Depends(get_db)):
+    message = delete_job_by_id(id=id, db=db)
+    if not message:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Job with id {id} not found")
+
+    return {"msg": "Successfully deleted."}
