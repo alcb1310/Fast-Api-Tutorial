@@ -3,15 +3,17 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from db.session import get_db
+from db.models.users import User
+from db.models.jobs import Job
 from schemas.jobs import JobCreate, ShowJob
 from db.controller.jobs import create_new_job, retreive_job, list_jobs, update_job_by_id, delete_job_by_id
+from apis.version1.routes.route_login import get_current_user_from_token
 
 router = APIRouter()
 
 
 @router.post("/", response_model=ShowJob)
-def create_job(job: JobCreate, db: Session = Depends(get_db)):
-    current_user = 1
+def create_job(job: JobCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_from_token)):
     job = create_new_job(job=job, db=db, owner_id=current_user)
     return job
 
@@ -47,10 +49,17 @@ def update_job(id: int, job: JobCreate, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}")
-def delete_job(id: int, db: Session = Depends(get_db)):
-    message = delete_job_by_id(id=id, db=db)
-    if not message:
+def delete_job(id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user_from_token)):
+    job: Job = retreive_job(id=id, db=db)
+    if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Job with id {id} not found")
 
-    return {"msg": "Successfully deleted."}
+    print(job.owner_id, current_user.id, current_user.is_superuser)
+    
+    if job.owner_id == current_user.id or current_user.is_superuser:
+        delete_job_by_id(id=id, db=db, owner_id=current_user.id)
+
+        return {"msg": "Successfully deleted."}
+
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"You are not permitted!!!")
